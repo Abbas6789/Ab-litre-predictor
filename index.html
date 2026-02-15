@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AB LITER DICTATOR PRO | V4</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        :root { --bg: #050709; --card: #111418; --neon: #00d2ff; --green: #00ff88; --red: #e11d48; --gold: #ffd700; --purple: #9c27b0; --blue: #2196f3; }
+        body { background: var(--bg); color: white; font-family: sans-serif; margin: 0; display: flex; justify-content: center; overflow-x: hidden; }
+        .app-container { width: 100%; max-width: 400px; padding: 15px; min-height: 100vh; background: #000; }
+
+        /* Login Screen */
+        #login-screen { position: fixed; inset: 0; background: #000; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        .login-card { background: var(--card); padding: 30px; border-radius: 20px; border: 1px solid #333; width: 100%; max-width: 320px; text-align: center; }
+
+        /* Main App Area */
+        #main-app { display: none; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #222; }
+        .logo-text { color: var(--red); font-weight: bold; font-style: italic; font-size: 20px; }
+
+        /* History */
+        .history-row { display: flex; gap: 8px; overflow-x: auto; padding: 10px 0; scrollbar-width: none; }
+        .chip { background: #1a1a1a; padding: 5px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; border: 1px solid #333; }
+
+        /* Display */
+        .game-window { 
+            background: radial-gradient(circle, #1a1a1a 0%, #000 100%); 
+            height: 220px; border-radius: 20px; position: relative; overflow: hidden; border: 1px solid #222;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 10px 0;
+        }
+        #plane { position: absolute; bottom: 20px; left: -80px; width: 70px; z-index: 2; transition: all 0.5s ease-in-out; }
+        .multiplier-text { font-size: 55px; font-weight: 900; z-index: 5; text-shadow: 0 0 15px rgba(0,0,0,0.8); }
+        .fly { animation: takeOff 2s infinite alternate ease-in-out; left: 45% !important; bottom: 45% !important; }
+        @keyframes takeOff { 0% { transform: translate(-5px, 0px); } 100% { transform: translate(5px, -15px); } }
+
+        /* Controls */
+        .control-panel { background: var(--card); border-radius: 20px; padding: 20px; border: 1px solid #222; margin-top: 10px; }
+        .main-input { width: 100%; padding: 15px; background: #000; border: 1px solid #333; color: white; border-radius: 12px; text-align: center; font-size: 18px; margin-bottom: 15px; box-sizing: border-box; }
+        .btn-predict { width: 100%; padding: 18px; border-radius: 15px; border: none; font-weight: bold; font-size: 20px; background: linear-gradient(to right, #2ecc71, #27ae60); color: white; cursor: pointer; }
+
+        /* Pricing */
+        .plan-box { background: #111; padding: 12px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-top: 10px; border: 1px solid #222; }
+        .buy-btn { background: var(--blue); color: white; padding: 8px 15px; border-radius: 8px; text-decoration: none; font-size: 12px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div id="login-screen">
+    <div class="login-card">
+        <h2 style="color:var(--red);">AB LITER</h2>
+        <p style="color:#888; font-size:12px;">ENTER VIP ACCESS KEY</p>
+        <input type="text" id="user-key" class="main-input" placeholder="PASTE KEY HERE">
+        <button class="btn-predict" onclick="verifyKey()">LOGIN ACCESS</button>
+    </div>
+</div>
+
+<div id="main-app" class="app-container">
+    <div class="header">
+        <div class="logo-text">AB LITER DICTATOR</div>
+        <div style="color:var(--green); font-size:10px;">VIP ACTIVE ●</div>
+    </div>
+
+    <div class="history-row" id="h-row">
+        <div class="chip" style="color:var(--purple)">5.20x</div>
+        <div class="chip" style="color:var(--blue)">1.45x</div>
+    </div>
+
+    <div class="game-window">
+        <img src="https://i.ibb.co/v4m0f5h/plane.png" id="plane" alt="plane">
+        <div class="multiplier-text" id="m-val">READY</div>
+    </div>
+
+    <div class="control-panel">
+        <label style="font-size:11px; color:#888; margin-bottom:5px; display:block;">LAST MULTIPLIER</label>
+        <input type="number" id="prev-input" class="main-input" placeholder="1.00">
+        <button class="btn-predict" onclick="runPrediction()">GET SIGNAL</button>
+    </div>
+
+    <div style="margin-top:20px;">
+        <p style="font-size:12px; color:var(--neon); font-weight:bold;">PREMIUM PACKAGES</p>
+        <div class="plan-box">
+            <span>Trial (24h) - <b style="color:var(--green);">300 PKR</b></span>
+            <a href="#" class="buy-btn wa-btn" data-msg="300 PKR Trial">BUY</a>
+        </div>
+        <div class="plan-box">
+            <span>Weekly (7 Days) - <b style="color:var(--green);">700 PKR</b></span>
+            <a href="#" class="buy-btn wa-btn" data-msg="700 PKR Weekly">BUY</a>
+        </div>
+        <div class="plan-box" style="border-color: var(--gold);">
+            <span style="color:var(--gold);">Lifetime VIP - <b>5000 PKR</b></span>
+            <a href="#" class="buy-btn wa-btn" style="background:var(--gold); color:black;" data-msg="5000 PKR Lifetime">BUY</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Firebase Config (Must match your Admin Panel)
+    const firebaseConfig = { databaseURL: "https://ab-liter-server-default-rtdb.firebaseio.com/" };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Unique Device Identification
+    const deviceID = navigator.userAgent + navigator.language;
+
+    function verifyKey() {
+        const key = document.getElementById('user-key').value.trim();
+        if(!key) return alert("Enter Key!");
+
+        db.ref('keys/' + key).once('value', (snap) => {
+            if(snap.exists()) {
+                const data = snap.val();
+                if(data.deviceId === "Not Bound" || data.deviceId === deviceID) {
+                    db.ref('keys/' + key).update({ deviceId: deviceID });
+                    document.getElementById('login-screen').style.display = 'none';
+                    document.getElementById('main-app').style.display = 'block';
+                } else {
+                    alert("Security Alert: Key is used on another device!");
+                }
+            } else {
+                alert("Invalid Key!");
+            }
+        });
+    }
+
+    function runPrediction() {
+        const prev = parseFloat(document.getElementById('prev-input').value);
+        if(!prev) return alert("Please enter last multiplier!");
+
+        const plane = document.getElementById('plane');
+        const mVal = document.getElementById('m-val');
+        
+        plane.classList.remove('fly');
+        mVal.innerText = "ANALYZING";
+        mVal.style.color = "white";
+
+        setTimeout(() => {
+            plane.classList.add('fly');
+            let res;
+            // Smart Logic: Based on previous history
+            if(prev < 1.5) res = (Math.random() * (4.5 - 2.5) + 2.5).toFixed(2);
+            else if(prev > 5) res = (Math.random() * (1.9 - 1.1) + 1.1).toFixed(2);
+            else res = (Math.random() * (3.8 - 1.2) + 1.2).toFixed(2);
+
+            mVal.innerText = res + "x";
+            const color = res > 2 ? "#9c27b0" : "#2196f3";
+            mVal.style.color = color;
+
+            const chip = document.createElement('div');
+            chip.className = 'chip';
+            chip.innerText = res + "x";
+            chip.style.color = color;
+            document.getElementById('h-row').prepend(chip);
+        }, 1500);
+    }
+
+    db.ref('settings/whatsapp').on('value', (s) => {
+        const num = s.val();
+        if(num) {
+            document.querySelectorAll('.wa-btn').forEach(btn => {
+                const msg = btn.getAttribute('data-msg');
+                btn.href = `https://wa.me/${num}?text=Hello%20Admin,%20I%20want%20to%20buy%20the%20${msg}%20Package.`;
+            });
+        }
+    });
+</script>
+</body>
+  </html>
+          
